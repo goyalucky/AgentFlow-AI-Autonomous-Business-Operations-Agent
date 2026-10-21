@@ -53,8 +53,10 @@ Modern enterprise operations require both **deterministic analytical precision**
 
 The following diagram illustrates the relationship between the client interface, API streaming layer, LangGraph state engine, and the underlying persistence and inference tools:
 
-```mermaid
+
+
 graph TB
+
     subgraph UI["Frontend Layer (React 18 + Vite + TailwindCSS)"]
         Dashboard["Dashboard & Metrics Ring"]
         NewTask["New Task Form & SSE Monitor"]
@@ -86,16 +88,17 @@ graph TB
         WebEngine["DuckDuckGo Engine<br/>(Live Web Query)"]
     end
 
-    %% Connections
+    %% Frontend to backend
     NewTask -->|Upload File| Upload
     Upload --> UploadsDir
     NewTask -->|Initiate Task| SSE
     SSE --> Planner
     REST <--> TasksDB
 
+    %% LangGraph execution workflow
     Planner --> Branch
-    Branch -- "Has CSV/Excel" --> Analyst
-    Branch -- "No Dataset" --> Researcher
+    Branch -->|Has CSV or Excel| Analyst
+    Branch -->|No Dataset| Researcher
 
     Analyst <--> UploadsDir
     Researcher <--> WebEngine
@@ -104,22 +107,25 @@ graph TB
     Researcher --> Reviewer
 
     Reviewer --> Critique
-    Critique -- "Pass (Verified)" --> Reporter
-    Critique -- "Fail (Discrepancy)" -->|Reflection Loop| Reviewer
+    Critique -->|Pass: Verified| Reporter
+    Critique -->|Fail: Discrepancy| Reviewer
 
+    %% Results and persistence
     Reporter --> TasksDB
     TasksDB -.-> Dashboard
     TasksDB -.-> LogViewer
     TasksDB -.-> ReportViewer
+
+    %% Server-Sent Events
     SSE -.->|Real-Time SSE Events| WorkflowView
     SSE -.->|Live Node Stream| NewTask
 
+    %% Local LLM connections
     Planner -.-> OllamaEngine
     Reviewer -.-> OllamaEngine
     Reporter -.-> OllamaEngine
-```
 
----
+
 
 ## 🔬 Agent Workflow & State Graph
 
